@@ -19,6 +19,7 @@ from flask_migrate import Migrate
 import bcrypt
 import qrcode
 from twilio.rest import Client
+tables_created = False
 
 # =====================================================
 # APP CONFIG
