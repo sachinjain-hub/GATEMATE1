@@ -237,16 +237,18 @@ def student():
     gate_requests = GatePassRequest.query.filter_by(
         student_id=user.id
     ).order_by(GatePassRequest.created_at.desc()).all()
-
     now = datetime.now(timezone.utc)
-    requests_list = []
 
-    for r in gate_requests:
-        qr_code_data = None
-        expires_at = r.qr_expires_at
-        if expires_at and expires_at > now and r.status == "Approved" and not r.qr_used:
-            verify_url = url_for("verify_qr", token=r.qr_token, _external=True)
-            qr_code_data = generate_qr_code(verify_url)
+    expires_at = r.qr_expires_at
+
+# 🔥 FIX: make expires_at timezone-aware if needed
+    if expires_at and expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+
+    if expires_at and expires_at > now and r.status == "Approved" and not r.qr_used:
+        verify_url = url_for("verify_qr", token=r.qr_token, _external=True)
+        qr_code_data = generate_qr_code(verify_url)
+
 
         requests_list.append({
             "id": r.id,
