@@ -102,9 +102,14 @@ class GatePassRequest(db.Model):
     qr_token = db.Column(db.String(100), unique=True)
     qr_expires_at = db.Column(db.DateTime)
     qr_used = db.Column(db.Boolean, default=False)
-@app.before_first_request
-def create_tables():
-    db.create_all()
+@app.before_request
+def create_tables_once():
+    global tables_created
+    if not tables_created:
+        with app.app_context():
+            db.create_all()
+            tables_created = True
+
 # =====================================================
 # HELPERS
 # =====================================================
@@ -142,13 +147,7 @@ def generate_qr_code(data):
 # =====================================================
 # ROUTES
 # =====================================================
-@app.before_request
-def create_tables_once():
-    global tables_created
-    if not tables_created:
-        with app.app_context():
-            db.create_all()
-            tables_created = True
+
 
 
 @app.route("/login", methods=["GET", "POST"])
