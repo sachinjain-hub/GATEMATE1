@@ -233,40 +233,56 @@ def student():
         flash("OTP sent to parent's mobile", "info")
         return redirect(url_for("student"))
 
-    # ================= FETCH REQUESTS =================
-    gate_requests = GatePassRequest.query.filter_by(
-        student_id=user.id
-    ).order_by(GatePassRequest.created_at.desc()).all()
-    now = datetime.now(timezone.utc)
+# ================= FETCH REQUESTS =================
+gate_requests = (
+    GatePassRequest.query
+    .filter_by(student_id=user.id)
+    .order_by(GatePassRequest.created_at.desc())
+    .all()
+)
+
+now = datetime.now(timezone.utc)
+requests_list = []
+
+for r in gate_requests:
+    qr_code_data = None
 
     expires_at = r.qr_expires_at
 
-# 🔥 FIX: make expires_at timezone-aware if needed
+    # 🔥 FIX: make expires_at timezone-aware if needed
     if expires_at and expires_at.tzinfo is None:
         expires_at = expires_at.replace(tzinfo=timezone.utc)
 
-    if expires_at and expires_at > now and r.status == "Approved" and not r.qr_used:
-        verify_url = url_for("verify_qr", token=r.qr_token, _external=True)
+    if (
+        expires_at
+        and expires_at > now
+        and r.status == "Approved"
+        and not r.qr_used
+    ):
+        verify_url = url_for(
+            "verify_qr",
+            token=r.qr_token,
+            _external=True
+        )
         qr_code_data = generate_qr_code(verify_url)
 
+    requests_list.append({
+        "id": r.id,
+        "reason": r.reason,
+        "out_date": r.out_date,
+        "out_time": r.out_time,
+        "status": r.status,
+        "created_at": r.created_at,
+        "qr_code_data": qr_code_data,
+        "qr_expires_at": expires_at
+    })
 
-        requests_list.append({
-            "id": r.id,
-            "reason": r.reason,
-            "out_date": r.out_date,
-            "out_time": r.out_time,
-            "status": r.status,
-            "created_at": r.created_at,
-            "qr_code_data": qr_code_data,
-            "qr_expires_at": expires_at
-        })
-
-    return render_template(
-        "student.html",
-        student_name=user.name,
-        requests_list=requests_list,
-        otp_required=session.get("otp_phase", False)
-    )
+return render_template(
+    "student.html",
+    student_name=user.name,
+    requests_list=requests_list,
+    otp_required=session.get("otp_phase", False)
+)
 
 
 # ================= HOD =================
