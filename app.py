@@ -33,6 +33,7 @@ app.config["SESSION_COOKIE_SECURE"] = True
 # =====================================================
 # DATABASE CONFIG
 # =====================================================
+
 DATABASE_URL = os.environ.get("DATABASE_URL")
 if not DATABASE_URL:
     raise RuntimeError("DATABASE_URL not set")
@@ -101,7 +102,9 @@ class GatePassRequest(db.Model):
     qr_token = db.Column(db.String(100), unique=True)
     qr_expires_at = db.Column(db.DateTime)
     qr_used = db.Column(db.Boolean, default=False)
-
+@app.before_first_request
+def create_tables():
+    db.create_all()
 # =====================================================
 # HELPERS
 # =====================================================
