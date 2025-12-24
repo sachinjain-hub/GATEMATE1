@@ -142,9 +142,13 @@ def generate_qr_code(data):
 # =====================================================
 # ROUTES
 # =====================================================
-@app.route("/")
-def index():
-    return render_template("index.html")
+@app.before_request
+def create_tables_once():
+    global tables_created
+    if not tables_created:
+        with app.app_context():
+            db.create_all()
+            tables_created = True
 
 
 @app.route("/login", methods=["GET", "POST"])
