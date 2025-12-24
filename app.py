@@ -150,7 +150,9 @@ def generate_qr_code(data):
 # =====================================================
 
 
-
+@app.route("/")
+def index():
+    return render_template("index.html")
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
